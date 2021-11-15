@@ -1,37 +1,31 @@
 import re
 import time
-from typing import List, Any
-
 import requests
 import pymysql
 
-headers = {
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36",
-    'Accept-Language': 'zh-CN'}
-
-
 def baidu(company):
-    url = "https://www.baidu.com/s?rtt=4&bsst=1&cl=2&tn=news&ie=utf-8&word=" + company
-    res = requests.get(url, headers=headers,timeout = 10).text
+    # 获取网页源代码
+    #url = "https://www.baidu.com/s?rtt=1&bsst=1&cl=2&tn=news&ie=utf-8&word="
+    url = "https://www.baidu.com/s?rtt=1&bsst=1&cl=2&tn=news&rsv_dl=ns_pc&word=" + company
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                             '(KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36 Edg/94.0.992.31'}
+    res = requests.get(url, headers=headers, timeout=10).text
 
-    p_href = '<h3 class="c-title">.*?<a href="(.*?)">'
-    p_title = '<h3 class="c-title">.*?>(.*?)</a>'
-    p_info = '<p class="c-author">(.*?)</p>'
+    p_href = '<h3 class="news-title_1YtI1"><a href="(.*?)"'
+    p_title = '<h3 class="news-title_1YtI1">.*?>(.*?)</a>'
+    p_date = '<span class="c-color-gray2 c-font-normal" aria-label="(.*?)">'
+    p_source = '<span class="c-color-gray c-font-normal c-gap-right" aria-label="(.*?)">'
+    source = re.findall(p_source, res, re.S)
+    date = re.findall(p_date, res, re.S)
     href = re.findall(p_href, res, re.S)
     title = re.findall(p_title, res, re.S)
-    info = re.findall(p_info, res, re.S)
 
-    source = []
-    date = []
     for i in range(len(title)):
         title[i] = title[i].strip()
         title[i] = re.sub('<.*?>', '', title[i])
-        info[i] = re.sub('<.*?>', '', info[i])
-        source.append(info[i].split('&nbsp;&nbsp;')[0])
-        date.append(info[i].split('&nbsp;&nbsp;')[1])
         source[i] = source[i].strip()
         date[i] = date[i].strip()
+
         date[i] = date[i].split(' ')[0]
         date[i] = re.sub('年', '-', date[i])
         date[i] = re.sub('月', '-', date[i])
@@ -42,7 +36,10 @@ def baidu(company):
             date[i] = date[i]
 
     score = []
-    keywords = ['违约', '诉讼', '兑付', '阿里', '百度', '京东', '互联网']
+    keywords = ['违约', '诉讼', '违法', '震惊', '离职', '控诉', '亏损', '跌',
+                '失败', '制裁', '打压', '抗议', '愤怒', '负面', '涉事', '危机',
+                '举报', '减持', '威胁', '争议', '波动', '恶意', '美国', '管制',
+                '短缺', '紧张', '收缩', '偿还']
     for i in range(len(title)):
         num = 0
         try:
@@ -71,26 +68,25 @@ def baidu(company):
             date[i] = ''
             source[i] = ''
             score[i] = ''
-        while '' in title:
-            title.remove('')
-        while '' in href:
-            href.remove('')
-        while '' in date:
-            date.remove('')
-        while '' in source:
-            source.remove('')
-        while '' in score:
-            score.remove('')
+    while '' in title:
+        title.remove('')
+    while '' in href:
+        href.remove('')
+    while '' in date:
+        date.remove('')
+    while '' in source:
+        source.remove('')
+    while '' in score:
+        score.remove('')
 
     for i in range(len(title)):
-        print(str(i+1) + '.' + title[i] + '('+date[i] + ' ' +source[i] + ') ')
+        print(str(i + 1) + '.' + title[i] + '(' + date[i] + ' ' + source[i] + ') ')
         print(href[i])
         print(company + '该新闻舆情评分为' + str(score[i]))
 
     for i in range(len(title)):
         db = pymysql.connect(host='localhost', port=3306, user='root', password='', database='pachong', charset='utf8')
         cur = db.cursor()
-        #sql = 'INSERT INTO test(company,title[i],href[i],source[i],date[i]) VALUES (%s,%s,%s,%s,%s)'
         # %%
         sql_1 = 'SELECT * FROM article WHERE company = %s'
         cur.execute(sql_1, company)
@@ -100,21 +96,23 @@ def baidu(company):
             title_all.append(data_all[j][1])
 
         if title[i] not in title_all:
-            sql_2 = 'INSERT INTO article(company, title, href, source, date) VALUES (%s,%s,%s,%s,%s)'
-            cur.execute(sql_2, (company, title[i], href[i], source[i], date[i]))
+            sql_2 = 'INSERT INTO article(company, title, href, source, date, score) VALUES (%s,%s,%s,%s,%s,%s)'
+            cur.execute(sql_2, (company, title[i], href[i], source[i], date[i], score[i]))
             db.commit()
         # %%
-        #cur.execute(sql, (company, title[i], href[i], source[i], data[i]))
-        #db.commit()
+        # cur.execute(sql, (company, title[i], href[i], source[i], data[i]))
+        # db.commit()
         cur.close()
         db.close()
-        print('^_^_^_^_^_^_^_^_^_^_^_^_^_^_^_^_^')
+
+    print('^_^_' * 10 + '^')
+    print(title)
 
 
-companys = ['华能信托', '阿里巴巴', '百度集团']
+companys = ['恒大', '万科', '中兴通讯', '中国船舶']
 for i in companys:
     try:
         baidu(i)
-        print(i+'爬取成功')
+        print(i + '爬取成功')
     except:
-        print(i+'导入数据失败')
+        print(i + '导入数据失败')
