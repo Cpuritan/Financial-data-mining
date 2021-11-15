@@ -11,11 +11,8 @@ browser.find_element_by_xpath('//*[@id="searchbox"]/div[2]/form/input[2]').click
 browser.find_element_by_xpath('//*[@id="app"]/div[2]/ul/li[6]/a/span').click()
 time.sleep(2)
 page = browser.page_source
+
 # 正则提取
-# p_title = '<div class="cfh_item_t">.*?>(.*?)</a>'
-# p_href = '<div class="cfh_item_t"><a href="(.*?)" target="_blank>"'
-# p_date = '<div class="cfh_item_cc"><span class="cfh_item_time">(.*?)</span>'
-# p_source = '<span class="cfh_zz">.*?target="_blank">(.*?)"</a>'
 p_title = '<div class="cfh_item_t">.*? target="_blank">(.*?)</a>'
 p_href = '<div class="cfh_item_t"><a href="(.*?)" target="_blank>"'
 p_date = '<span class="cfh_item_time">(.*?)</span>'
@@ -25,7 +22,7 @@ source = re.findall(p_source, page, re.S)
 date = re.findall(p_date, page, re.S)
 href = re.findall(p_href, page, re.S)
 title = re.findall(p_title, page, re.S)
-
+# 测试是否提取成功
 print('*'*20)
 print(len(title))
 print('*'*20)
@@ -43,7 +40,7 @@ for i in range(len(title)):
         date[i] = time.strftime("%Y-%m-%d")
     else:
         date[i] = date[i]
-
-
-
-
+# 结果展示
+print(title)
+print(date)
+print(source)
