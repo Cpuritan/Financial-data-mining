@@ -1,4 +1,5 @@
 import re
+import time
 from selenium import webdriver
 
 chrome_options = webdriver.ChromeOptions()
@@ -8,17 +9,17 @@ browser.get("https://so.eastmoney.com/")#访问东方财富网
 browser.find_element_by_xpath('//*[@id="searchSuggest"]').send_keys('中国恒大')
 browser.find_element_by_xpath('//*[@id="searchbox"]/div[2]/form/input[2]').click()
 browser.find_element_by_xpath('//*[@id="app"]/div[2]/ul/li[6]/a/span').click()
-
+time.sleep(2)
 page = browser.page_source
 # 正则提取
 # p_title = '<div class="cfh_item_t">.*?>(.*?)</a>'
-# p_href = '<div class="cfh_item_t"><a href="(.*?)" target="_black>"'
+# p_href = '<div class="cfh_item_t"><a href="(.*?)" target="_blank>"'
 # p_date = '<div class="cfh_item_cc"><span class="cfh_item_time">(.*?)</span>'
-# p_source = '<span class="cfh_cc">.*?target="_black">(.*?)"</a>'
+# p_source = '<span class="cfh_zz">.*?target="_blank">(.*?)"</a>'
 p_title = '<div class="cfh_item_t">.*? target="_blank">(.*?)</a>'
 p_href = '<div class="cfh_item_t"><a href="(.*?)" target="_blank>"'
 p_date = '<span class="cfh_item_time">(.*?)</span>'
-p_source = '<span class="cfh_zz">.*?target="_blank">(.*?)"</a></span>'
+p_source = '<span class="cfh_zz">.*?target="_blank">(.*?)</a></span>'
 
 source = re.findall(p_source, page, re.S)
 date = re.findall(p_date, page, re.S)
