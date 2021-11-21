@@ -3,7 +3,7 @@ import time
 from selenium import webdriver
 
 chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument('--headless')
+#chrome_options.add_argument('--headless')
 browser = webdriver.Chrome(options=chrome_options)
 browser.get("https://so.eastmoney.com/")#访问东方财富网
 browser.find_element_by_xpath('//*[@id="searchSuggest"]').send_keys('中国恒大')
